@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(
     description='Plays bird sounds to call birds. Only wave files are supported.',
     epilog='Thanks for using Bird Flirt')
 
-parser.add_argument('-s', '--sounds')
+parser.add_argument('-s', '--sounds', help='set path to sound files. default current directory', default=".")
 args = parser.parse_args()
 sounds_directory = args.sounds
 
@@ -28,6 +28,9 @@ files = [file for file in listdir(sounds_directory) if isfile(join(sounds_direct
 files_filtered = [file for file in files if file.endswith("wav") or file.endswith("wave")]
 files_full_path = [join(sounds_directory, file) for file in files_filtered]
 
+if not files_full_path:
+    exit("No usable files found in given directory")
+
 delay_base_s = 3
 delay_range_s = 3
 
@@ -36,9 +39,9 @@ logging.debug("Using files: " + str(files_full_path))
 
 async def play_bird_sound(filename):
     logging.debug("Playing file: " + filename)
-    #playsound(filename)
-    # XXX
-    await asyncio.sleep(2)
+    playsound(filename)
+    # debug sleep
+    #await asyncio.sleep(2)
 
 async def wait_between_sounds():
     delay_random = random.randint(-delay_range_s, delay_range_s)
@@ -57,4 +60,3 @@ async def main_loop():
             await task
 
 asyncio.run(main_loop())
-logging.info("hello")
