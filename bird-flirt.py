@@ -7,9 +7,11 @@ import random
 from os import listdir
 from os.path import isfile, join
 from playsound import playsound
+import RPi.GPIO as GPIO
+import subprocess
 
 logging.basicConfig(
-    format='%(asctime)s %(levelname)-8s %(message)s',
+    format='%(levelname)-8s %(message)s',
     level=logging.DEBUG)
 
 parser = argparse.ArgumentParser(
@@ -31,17 +33,15 @@ files_full_path = [join(sounds_directory, file) for file in files_filtered]
 if not files_full_path:
     exit("No usable files found in given directory")
 
-delay_base_s = 3
-delay_range_s = 3
+delay_base_s = 300
+delay_range_s = 60
 
 
 logging.debug("Using files: " + str(files_full_path))
 
 async def play_bird_sound(filename):
     logging.debug("Playing file: " + filename)
-    playsound(filename)
-    # debug sleep
-    #await asyncio.sleep(2)
+    subprocess.run(["aplay", filename])
 
 async def wait_between_sounds():
     delay_random = random.randint(-delay_range_s, delay_range_s)
@@ -58,5 +58,18 @@ async def main_loop():
         for file in files_full_path:
             task = asyncio.create_task(play_sound_and_wait(file))
             await task
+
+GPIO.setmode(GPIO.BOARD) # Use physical pin numbering
+
+LED_PIN = 15
+BTN_PIN = 13
+
+GPIO.setup(BTN_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(LED_PIN, GPIO.OUT)
+
+GPIO.output(LED_PIN, GPIO.HIGH)
+#while True: # Run forever
+#    if GPIO.input(10) == GPIO.HIGH:
+#        print("Button was pushed!")
 
 asyncio.run(main_loop())
